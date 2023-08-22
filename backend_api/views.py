@@ -37,27 +37,30 @@ class BasketAdd(APIView):
     def post(self, request):
         post = json.loads(request.body)
         key = post.get('key')
+        # filter(key=key).values('product_id') при помощи filter берем key и сравниваем с key из базы данных
+        # если key в базе найден то берем product_id и сохраняем в переменную
         basket = Basket.objects.filter(key=key).values('product_id')
+        print(basket)
         product_ids = [item['product_id'] for item in basket]
-
+        print(product_ids)
         output = []
         materials = Material.objects.filter(idProduct__in=product_ids)
+        print(materials)
         for material in materials:
             basket = Basket.objects.get(key=key, product_id=material.idProduct)
-            if 1 <= basket.quantity:
-                for _ in range(basket.quantity):
-                    output.append({
-                        "id": material.idProduct,
-                        "title": material.title,
-                        "name": material.name,
-                        "img": material.img,
-                        "brand": material.brand,
-                        "price": material.price,
-                        "screenSize": material.screenSize,
-                        "memoryCard": material.memoryCard,
-                        "cpu": material.cpu,
-                        "videoCard": material.videoCard,
-                    })
+            for _ in range(basket.quantity):
+                output.append({
+                    "id": material.idProduct,
+                    "title": material.title,
+                    "name": material.name,
+                    "img": material.img,
+                    "brand": material.brand,
+                    "price": material.price,
+                    "screenSize": material.screenSize,
+                    "memoryCard": material.memoryCard,
+                    "cpu": material.cpu,
+                    "videoCard": material.videoCard,
+                })
         return Response(output)
 
 
@@ -75,8 +78,7 @@ def new_reg(request):
     post = json.loads(request.body)
     name = post.get('username')
     email = post.get('email')
-    password = post.get('password')
-    hashed_password = bcrypt.hashpw(password.encode(
+    hashed_password = bcrypt.hashpw(post.get('password').encode(
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
     new_user = NewUser(email=email, password=hashed_password, name=name)
     new_user.save()
@@ -101,7 +103,7 @@ def new_login(request):
         new_key = NewKey.objects.get(user=new_user)
     except Exception:
         return HttpResponse({'message': 'User key not found'}, status=401)
-    if bcrypt.checkpw(password.encode('utf-8'), new_user.password.encode('utf-8')):
+    if bcrypt.checkpw(post.get('password').encode('utf-8'), new_user.password.encode('utf-8')):
         return HttpResponse(json.dumps({'name': new_user.name, 'key': new_key.key}), status=200)
     else:
         return HttpResponse({'message': 'Wrong password'}, status=401)
@@ -114,11 +116,8 @@ def basket(request):
     product_id = post.get('product_id')
     quantity = post.get('quantity')
     if quantity == 0:  # если количество равно 0, то удаляем модель из базы
-        # try:
         basket = Basket.objects.get(key=key, product_id=product_id)
         basket.delete()
-        # except Basket.DoesNotExist:
-        #     pass
     else:  # если количество не равно 0, то обновляем или создаем модель в базе
         basket, created = Basket.objects.get_or_create(
             key=key, product_id=product_id, defaults={'quantity': quantity})
@@ -130,9 +129,7 @@ def basket(request):
 
 @csrf_exempt
 def orders_list(request):
-    # if request.method == 'POST':
     post = json.loads(request.body)
-    # print(post)
     key = post.get('key')
     product_id = post.get('product_id')
     quantity = post.get('quantity')
@@ -168,29 +165,54 @@ class AddOrders(APIView):
         key = post_data.get('key')
         orders = Orders.objects.filter(key=key)
         output = []
-        if orders.exists():
-            for order in orders:
-                material = Material.objects.get(idProduct=order.product_id)
-                new_id = str(uuid.uuid4())
-                for _ in range(int(order.quantity)):
-                    output.append({
-                        "idProduct": new_id,
-                        "title": material.title,
-                        "name": material.name,
-                        "img": material.img,
-                        "brand": material.brand,
-                        "price": material.price,
-                        "screenSize": material.screenSize,
-                        "memoryCard": material.memoryCard,
-                        "cpu": material.cpu,
-                        "videoCard": material.videoCard,
-                        "lastName": order.lastName,
-                        "firstName": order.firstName,
-                        "patronymic": order.patronymic,
-                        "phone": order.phone,
-                        "email": order.email,
-                        "city": order.city,
-                        "address": order.address,
-                        "comments": order.comments,
-                    })
+        for order in orders:
+            material = Material.objects.get(idProduct=order.product_id)
+            new_id = str(uuid.uuid4())
+            for _ in range(int(order.quantity)):
+                output.append({
+                    "idProduct": new_id,
+                    "title": material.title,
+                    "name": material.name,
+                    "img": material.img,
+                    "brand": material.brand,
+                    "price": material.price,
+                    "screenSize": material.screenSize,
+                    "memoryCard": material.memoryCard,
+                    "cpu": material.cpu,
+                    "videoCard": material.videoCard,
+                    "lastName": order.lastName,
+                    "firstName": order.firstName,
+                    "patronymic": order.patronymic,
+                    "phone": order.phone,
+                    "email": order.email,
+                    "city": order.city,
+                    "address": order.address,
+                    "comments": order.comments,
+                })
         return Response(output)
+
+
+@csrf_exempt
+def search(request):
+    if request.method == 'POST':
+        post = json.loads(request.body)
+        name = post.get('name')
+        if len(name) >= 3:
+            name = name.capitalize()  # переводим первую букву в верхний регистр
+            matched_materials = Material.objects.filter(name__icontains=name)
+            output = [{
+                "idProduct": material.idProduct,
+                "title": material.title,
+                "name": material.name,
+                "img": material.img,
+                "brand": material.brand,
+                "price": material.price,
+                "screenSize": material.screenSize,
+                "memoryCard": material.memoryCard,
+                "cpu": material.cpu,
+                "videoCard": material.videoCard,
+            } for material in matched_materials]
+            return JsonResponse(output, safe=False)
+        else:
+            return JsonResponse({"message": "Invalid request. Name should be at least 3 characters long."}, status=400)
+    return JsonResponse({"message": "Invalid request method"}, status=400)

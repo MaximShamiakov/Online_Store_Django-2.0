@@ -13,4 +13,5 @@ urlpatterns = [
     path("basket_add/", BasketAdd.as_view(), name="basket_add"),
     path('orders/', orders_list, name='orders_list'),
     path("addOrders/", AddOrders.as_view(), name="addOrders"),
+    path('search/', search, name='search'),
 ]

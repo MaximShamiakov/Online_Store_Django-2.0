@@ -15,20 +15,30 @@ import uuid
 
 class MaterialView(APIView):
     def post(self, request):
+        title = request.data.get("title")
+        page = request.data.get("page", 1)
+        print(page)
+        items_per_page = 10
+        start_index = (page - 1) * items_per_page
+        print(start_index)
+        end_index = page * items_per_page
+        print(end_index)
+
+        materials = Material.objects.filter(title=title)[start_index:end_index]
         output = [
             {
-                "idProduct": output.idProduct,
-                "title": output.title,
-                "name": output.name,
-                "img": output.img,
-                "brand": output.brand,
-                "price": output.price,
-                "screenSize": output.screenSize,
-                "memoryCard": output.memoryCard,
-                "cpu": output.cpu,
-                "videoCard": output.videoCard,
+                "idProduct": material.id,
+                "title": material.title,
+                "name": material.name,
+                "img": material.img,
+                "brand": material.brand,
+                "price": material.price,
+                "screenSize": material.screenSize,
+                "memoryCard": material.memoryCard,
+                "cpu": material.cpu,
+                "videoCard": material.videoCard,
             }
-            for output in Material.objects.all()
+            for material in materials
         ]
         return Response(output)
 
@@ -40,10 +50,9 @@ class BasketAdd(APIView):
         # filter(key=key).values('product_id') при помощи filter берем key и сравниваем с key из базы данных
         # если key в базе найден то берем product_id и сохраняем в переменную
         basket = Basket.objects.filter(key=key).values('product_id')
-        print(basket)
         product_ids = [item['product_id'] for item in basket]
-        print(product_ids)
         output = []
+        # idProduct__in=product_ids - означает, что мы хотим выбрать записи, у которых поле idProduct содержится в списке product_ids
         materials = Material.objects.filter(idProduct__in=product_ids)
         print(materials)
         for material in materials:
@@ -92,7 +101,6 @@ def new_reg(request):
 def new_login(request):
     post = json.loads(request.body)
     email = post.get('email')
-    password = post.get('password')
     new_user = None
     try:
         new_user = NewUser.objects.get(email=email)
@@ -115,7 +123,8 @@ def basket(request):
     key = post.get('key')
     product_id = post.get('product_id')
     quantity = post.get('quantity')
-    if quantity == 0:  # если количество равно 0, то удаляем модель из базы
+    print(post)
+    if quantity == 0:
         basket = Basket.objects.get(key=key, product_id=product_id)
         basket.delete()
     else:  # если количество не равно 0, то обновляем или создаем модель в базе

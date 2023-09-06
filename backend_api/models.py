@@ -67,3 +67,36 @@ class Orders(models.Model):
     city = models.CharField(max_length=225)
     address = models.CharField(max_length=225)
     comments = models.CharField(max_length=255, default='')
+
+
+class Contacts(models.Model):
+    name = models.CharField(max_length=225)
+    contacts = models.TextField()
+
+
+class Design(models.Model):
+    header = models.CharField(max_length=225)
+    information = models.TextField()
+
+
+class Service(models.Model):
+    header = models.CharField(max_length=225)
+    information = models.TextField()
+
+
+class Delivery(models.Model):
+    header = models.CharField(max_length=225)
+    information = models.TextField()
+
+
+class PageRegDescription(models.Model):
+    header1 = models.CharField(max_length=225)
+    header2 = models.CharField(max_length=225)
+    span = models.CharField(max_length=225)
+    information = models.TextField()
+
+
+class ProductName(models.Model):
+    products = models.CharField(max_length=225)
+    icons = models.CharField(max_length=225)
+    title = models.CharField(max_length=225)

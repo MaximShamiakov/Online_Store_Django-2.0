@@ -1,11 +1,10 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .models import Material
 from rest_framework.response import Response
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import NewUser, NewKey, Basket, Orders
+from .models import Material, NewUser, NewKey, Basket, Orders, Contacts, Delivery, Design, Service, PageRegDescription, ProductName
 from django.http import HttpResponse
 import bcrypt
 import json
@@ -17,12 +16,12 @@ class MaterialView(APIView):
     def post(self, request):
         title = request.data.get("title")
         page = request.data.get("page", 1)
-        print(page)
+        # print(page)
         items_per_page = 10
         start_index = (page - 1) * items_per_page
-        print(start_index)
+        # print(start_index)
         end_index = page * items_per_page
-        print(end_index)
+        # print(end_index)
 
         materials = Material.objects.filter(title=title)[start_index:end_index]
         output = [
@@ -37,6 +36,7 @@ class MaterialView(APIView):
                 "memoryCard": material.memoryCard,
                 "cpu": material.cpu,
                 "videoCard": material.videoCard,
+                "id": material.id,
             }
             for material in materials
         ]
@@ -203,25 +203,81 @@ class AddOrders(APIView):
 
 @csrf_exempt
 def search(request):
-    if request.method == 'POST':
-        post = json.loads(request.body)
-        name = post.get('name')
-        if len(name) >= 3:
-            name = name.capitalize()  # переводим первую букву в верхний регистр
-            matched_materials = Material.objects.filter(name__icontains=name)
-            output = [{
-                "idProduct": material.idProduct,
-                "title": material.title,
-                "name": material.name,
-                "img": material.img,
-                "brand": material.brand,
-                "price": material.price,
-                "screenSize": material.screenSize,
-                "memoryCard": material.memoryCard,
-                "cpu": material.cpu,
-                "videoCard": material.videoCard,
-            } for material in matched_materials]
-            return JsonResponse(output, safe=False)
-        else:
-            return JsonResponse({"message": "Invalid request. Name should be at least 3 characters long."}, status=400)
-    return JsonResponse({"message": "Invalid request method"}, status=400)
+    post = json.loads(request.body)
+    name = post.get('name')
+    if len(name) >= 3:
+        name = name.capitalize()  # переводим первую букву в верхний регистр
+        matched_materials = Material.objects.filter(name__icontains=name)
+        output = [{
+            "idProduct": material.idProduct,
+            "title": material.title,
+            "name": material.name,
+            "img": material.img,
+            "brand": material.brand,
+            "price": material.price,
+            "screenSize": material.screenSize,
+            "memoryCard": material.memoryCard,
+            "cpu": material.cpu,
+            "videoCard": material.videoCard,
+        } for material in matched_materials]
+        return JsonResponse(output, safe=False)
+    else:
+        return JsonResponse({"message": "Invalid request. Name should be at least 3 characters long."}, status=400)
+
+
+@csrf_exempt
+def contacts(request):
+    contacts_list = []
+    for contact in Contacts.objects.all():
+        contacts_list.append(
+            {'name': contact.name, 'contacts': contact.contacts})
+    return JsonResponse(contacts_list, safe=False)
+
+
+@csrf_exempt
+def design(request):
+    design_list = []
+    for designs in Design.objects.all():
+        design_list.append({
+            'header': designs.header, 'information': designs.information})
+    return JsonResponse(design_list, safe=False)
+
+
+@csrf_exempt
+def service(request):
+    service_list = []
+    for services in Service.objects.all():
+        service_list.append(
+            {'header': services.header, 'information': services.information})
+    return JsonResponse(service_list, safe=False)
+
+
+@csrf_exempt
+def delivery(request):
+    delivery_list = []
+    for deliverys in Delivery.objects.all():
+        delivery_list.append(
+            {'header': deliverys.header, 'information': deliverys.information})
+    return JsonResponse(delivery_list, safe=False)
+
+
+@csrf_exempt
+def regDescription(request):
+    reg_description_list = []
+    for reg_descriptions in PageRegDescription.objects.all():
+        reg_description_list.append(
+            {'header1': reg_descriptions.header1,  'header2': reg_descriptions.header2,
+                'span': reg_descriptions.span,  'information': reg_descriptions.information}
+        )
+    return JsonResponse(reg_description_list, safe=False)
+
+
+@csrf_exempt
+def productName(request):
+    products_list = []
+    for product in ProductName.objects.all():
+        products_list.append(
+            {'products': product.products,  'icons': product.icons,
+                'title': product.title, }
+        )
+    return JsonResponse(products_list, safe=False)

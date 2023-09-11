@@ -26,7 +26,7 @@ class MaterialView(APIView):
         materials = Material.objects.filter(title=title)[start_index:end_index]
         output = [
             {
-                "idProduct": material.id,
+                "id": material.id,
                 "title": material.title,
                 "name": material.name,
                 "img": material.img,
@@ -36,7 +36,6 @@ class MaterialView(APIView):
                 "memoryCard": material.memoryCard,
                 "cpu": material.cpu,
                 "videoCard": material.videoCard,
-                "id": material.id,
             }
             for material in materials
         ]
@@ -53,13 +52,13 @@ class BasketAdd(APIView):
         product_ids = [item['product_id'] for item in basket]
         output = []
         # idProduct__in=product_ids - означает, что мы хотим выбрать записи, у которых поле idProduct содержится в списке product_ids
-        materials = Material.objects.filter(idProduct__in=product_ids)
+        materials = Material.objects.filter(id__in=product_ids)
         print(materials)
         for material in materials:
-            basket = Basket.objects.get(key=key, product_id=material.idProduct)
+            basket = Basket.objects.get(key=key, product_id=material.id)
             for _ in range(basket.quantity):
                 output.append({
-                    "id": material.idProduct,
+                    "id": material.id,
                     "title": material.title,
                     "name": material.name,
                     "img": material.img,
@@ -74,11 +73,12 @@ class BasketAdd(APIView):
 
 
 def get_filtered_products(request):
+    print(request)
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
-    products = Material.objects.filter(
-        Q(price__gte=min_price) & Q(price__lte=max_price))
-
+    title = request.GET.get('title')
+    products = Material.objects.filter(title=title,
+                                       price__gte=min_price, price__lte=max_price)
     return JsonResponse({'data': list(products.values())})
 
 
@@ -175,11 +175,11 @@ class AddOrders(APIView):
         orders = Orders.objects.filter(key=key)
         output = []
         for order in orders:
-            material = Material.objects.get(idProduct=order.product_id)
+            material = Material.objects.get(id=order.product_id)
             new_id = str(uuid.uuid4())
             for _ in range(int(order.quantity)):
                 output.append({
-                    "idProduct": new_id,
+                    "id": new_id,
                     "title": material.title,
                     "name": material.name,
                     "img": material.img,
@@ -209,7 +209,7 @@ def search(request):
         name = name.capitalize()  # переводим первую букву в верхний регистр
         matched_materials = Material.objects.filter(name__icontains=name)
         output = [{
-            "idProduct": material.idProduct,
+            "id": material.id,
             "title": material.title,
             "name": material.name,
             "img": material.img,

@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 class Material(models.Model):
     # Заголовок материала
-    idProduct = models.CharField(max_length=250, blank=True)
+    # idProduct = models.CharField(max_length=250, blank=True)
     title = models.CharField(max_length=250, blank=True)
     name = models.CharField(max_length=250, blank=True)
     img = models.CharField(max_length=250,  blank=True)

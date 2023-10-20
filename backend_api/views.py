@@ -16,12 +16,9 @@ class MaterialView(APIView):
     def post(self, request):
         title = request.data.get("title")
         page = request.data.get("page", 1)
-        # print(page)
         items_per_page = 10
         start_index = (page - 1) * items_per_page
-        # print(start_index)
         end_index = page * items_per_page
-        # print(end_index)
 
         materials = Material.objects.filter(title=title)[start_index:end_index]
         output = [
@@ -44,16 +41,11 @@ class MaterialView(APIView):
 
 class BasketAdd(APIView):
     def post(self, request):
-        post = json.loads(request.body)
-        key = post.get('key')
-        # filter(key=key).values('product_id') при помощи filter берем key и сравниваем с key из базы данных
-        # если key в базе найден то берем product_id и сохраняем в переменную
+        key = request.data.get('key')
         basket = Basket.objects.filter(key=key).values('product_id')
         product_ids = [item['product_id'] for item in basket]
         output = []
-        # idProduct__in=product_ids - означает, что мы хотим выбрать записи, у которых поле idProduct содержится в списке product_ids
         materials = Material.objects.filter(id__in=product_ids)
-        print(materials)
         for material in materials:
             basket = Basket.objects.get(key=key, product_id=material.id)
             for _ in range(basket.quantity):
@@ -73,7 +65,6 @@ class BasketAdd(APIView):
 
 
 def get_filtered_products(request):
-    print(request)
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     title = request.GET.get('title')
@@ -123,11 +114,10 @@ def basket(request):
     key = post.get('key')
     product_id = post.get('product_id')
     quantity = post.get('quantity')
-    print(post)
     if quantity == 0:
         basket = Basket.objects.get(key=key, product_id=product_id)
         basket.delete()
-    else:  # если количество не равно 0, то обновляем или создаем модель в базе
+    else:
         basket, created = Basket.objects.get_or_create(
             key=key, product_id=product_id, defaults={'quantity': quantity})
         if not created:
@@ -206,7 +196,7 @@ def search(request):
     post = json.loads(request.body)
     name = post.get('name')
     if len(name) >= 3:
-        name = name.capitalize()  # переводим первую букву в верхний регистр
+        name = name.capitalize()
         matched_materials = Material.objects.filter(name__icontains=name)
         output = [{
             "id": material.id,

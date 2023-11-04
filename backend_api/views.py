@@ -41,7 +41,8 @@ class MaterialView(APIView):
 
 class BasketAdd(APIView):
     def post(self, request):
-        key = request.data.get('key')
+        post = json.loads(request.body)
+        key = post.get('key')
         basket = Basket.objects.filter(key=key).values('product_id')
         product_ids = [item['product_id'] for item in basket]
         output = []
@@ -49,6 +50,7 @@ class BasketAdd(APIView):
         for material in materials:
             basket = Basket.objects.get(key=key, product_id=material.id)
             for _ in range(basket.quantity):
+                print(basket)
                 output.append({
                     "id": material.id,
                     "title": material.title,
@@ -61,6 +63,7 @@ class BasketAdd(APIView):
                     "cpu": material.cpu,
                     "videoCard": material.videoCard,
                 })
+                print(output)
         return Response(output)
 
 

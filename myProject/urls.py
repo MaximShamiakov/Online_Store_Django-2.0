@@ -4,8 +4,8 @@ from django.urls import re_path as url
 from backend_api.views import *
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("", MaterialView.as_view(), name="all material"),
+    path("", admin.site.urls),
+    path("material/", MaterialView.as_view(), name="all material"),
     path("filtered", get_filtered_products, name="get_filtered_products"),
     path("new_reg/", new_reg, name="new_reg"),
     path("new_login/", new_login, name="new_login"),
@@ -20,4 +20,5 @@ urlpatterns = [
     path("delivery/", delivery, name="delivery"),
     path("regDescription/", regDescription, name="regDescription"),
     path("productName/", productName, name="productName"),
+    path("logo/", logo, name="logo"),
 ]

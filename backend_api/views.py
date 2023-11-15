@@ -1,10 +1,8 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Material, NewUser, NewKey, Basket, Orders, Contacts, Delivery, Design, Service, PageRegDescription, ProductName
+from .models import Material, NewUser, NewKey, Basket, Orders, Contacts, Delivery, Design, Service, PageRegDescription, ProductName, Logo
 from django.http import HttpResponse
 import bcrypt
 import json
@@ -19,7 +17,6 @@ class MaterialView(APIView):
         items_per_page = 10
         start_index = (page - 1) * items_per_page
         end_index = page * items_per_page
-
         materials = Material.objects.filter(title=title)[start_index:end_index]
         output = [
             {
@@ -50,7 +47,6 @@ class BasketAdd(APIView):
         for material in materials:
             basket = Basket.objects.get(key=key, product_id=material.id)
             for _ in range(basket.quantity):
-                print(basket)
                 output.append({
                     "id": material.id,
                     "title": material.title,
@@ -63,7 +59,6 @@ class BasketAdd(APIView):
                     "cpu": material.cpu,
                     "videoCard": material.videoCard,
                 })
-                print(output)
         return Response(output)
 
 
@@ -274,3 +269,10 @@ def productName(request):
                 'title': product.title, }
         )
     return JsonResponse(products_list, safe=False)
+
+
+@csrf_exempt
+def logo(request):
+    logo = Logo.objects.all()
+    data = list(logo.values_list('name', flat=True))
+    return JsonResponse(data, safe=False)

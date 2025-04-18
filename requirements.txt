@@ -1,8 +1,8 @@
-asgiref==3.6.0
+asgiref==3.2.10          # Совместим с Django 3.1.2
 bcrypt==4.0.1
 Django==3.1.2
-django-cors-headers==3.14.0
-django-filter==23.2
+django-cors-headers==3.7.0  # Работает с Django 3.1.2
+django-filter==2.4.0       # Совместимая версия
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.2.2
 Pillow==9.5.0
